@@ -9,7 +9,8 @@ import { Server } from 'socket.io'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const distDir = path.join(__dirname, 'dist')
+const distCandidates = [path.join(__dirname, 'dist'), path.join(process.cwd(), 'dist')]
+const distDir = distCandidates.find((candidate) => fs.existsSync(candidate)) || distCandidates[0]
 
 const app = express()
 const server = createServer(app)
@@ -445,6 +446,8 @@ app.get('/api/public/health', async (_req, res) => {
     databaseEnabled,
     words: await countWords(),
     adminConfigured: Boolean(ADMIN_PASSWORD),
+    distExists: fs.existsSync(distDir),
+    cwd: process.cwd(),
   })
 })
 
@@ -658,6 +661,9 @@ io.on('connection', (socket) => {
 
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir))
+  app.get('/', (_req, res) => {
+    res.sendFile(path.join(distDir, 'index.html'))
+  })
   app.use((req, res, next) => {
     if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
       next()

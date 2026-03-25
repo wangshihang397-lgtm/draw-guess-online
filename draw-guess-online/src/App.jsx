@@ -42,7 +42,7 @@ function App() {
   const ctxRef = useRef(null)
   const currentStrokeRef = useRef(null)
   const redrawStrokesRef = useRef([])
-  const chatEndRef = useRef(null)
+  const chatListRef = useRef(null)
 
   const initialRoomCode = new URLSearchParams(window.location.search).get('room') || ''
   const [form, setForm] = useState({ playerName: '', roomCode: initialRoomCode.toUpperCase() })
@@ -236,7 +236,15 @@ function App() {
   }, [])
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const chatList = chatListRef.current
+    if (!chatList) {
+      return
+    }
+
+    chatList.scrollTo({
+      top: chatList.scrollHeight,
+      behavior: 'smooth',
+    })
   }, [roomState.messages])
 
   useEffect(() => {
@@ -674,14 +682,13 @@ function App() {
               </div>
             </div>
 
-            <div className="messages">
+            <div className="messages" ref={chatListRef}>
               {roomState.messages.map((message) => (
                 <div className={`message ${message.type}`} key={message.id}>
                   <span className="author">{message.author}</span>
                   <p>{message.text}</p>
                 </div>
               ))}
-              <div ref={chatEndRef}></div>
             </div>
 
             <form className="chat-form" onSubmit={sendMessage}>
